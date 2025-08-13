@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>شات Shehab Academy (بدون سيرفر + ميزات)</title>
+<style>
+  body {font-family: Arial,sans-serif; background:#f0f2f5; margin:0; padding:20px; color:#111; display:flex; justify-content:center; height:100vh; flex-direction: column;}
+  #loginScreen, #chatScreen {max-width:500px; margin:auto; background:#fff; border-radius:8px; padding:20px; box-shadow:0 6px 18px rgba(0,0,0,0.1);}
+  #chatScreen {display:none; height:600px; display:flex; flex-direction: column;}
+  #messages {flex:1; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:6px; background:#fafafa;}
+  .msg {margin-bottom:10px; padding:8px; background:#fff; border-radius:6px; word-break:break-word; box-shadow:0 1px 3px rgba(0,0,0,0.1); position: relative;}
+  .msg .username {font-weight:bold;}
+  .msg .time {font-size:10px; color:#888; margin-left:10px;}
+  .msg .actions {position: absolute; top:5px; left:5px; display:flex; gap:5px;}
+  .msg .actions button {background:transparent; border:none; color:#2d8cff; cursor:pointer; font-size:12px; padding:0;}
+  textarea {width:100%; padding:8px; resize:none; border-radius:6px; border:1px solid #ddd; box-sizing: border-box;}
+  button {margin-top:8px; padding:10px 15px; background:#2d8cff; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:16px;}
+  button:disabled {background:#9ec1ff; cursor:not-allowed;}
+  #emojiPicker {display:none; border:1px solid #ddd; background:#fff; padding:8px; border-radius:6px; max-width: 300px; max-height: 120px; overflow-y: auto; position: absolute; bottom: 60px; right: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
+  #emojiPicker span {cursor:pointer; font-size:20px; margin:3px; user-select:none;}
+  #emojiBtn {position: relative;}
+  #userInfo {margin-bottom: 15px; font-weight: bold; text-align: center;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <h2>تسجيل الدخول</h2>
+  <input type="text" id="usernameInput" placeholder="اكتب اسمك" />
+  <button id="loginBtn">دخول</button>
+  <div id="loginMsg" style="color:red; margin-top:10px;"></div>
+</div>
+
+<div id="chatScreen">
+  <div id="userInfo"></div>
+  <div id="messages"></div>
+
+  <div style="position: relative;">
+    <textarea id="messageInput" rows="3" placeholder="اكتب رسالتك هنا..."></textarea>
+    <button id="emojiBtn" title="أظهار الإيموجي" style="position: absolute; bottom: 10px; right: 10px; padding: 6px 10px; font-size: 20px; background:#eee; border:none; border-radius:6px; cursor:pointer;">😊</button>
+    <div id="emojiPicker"></div>
+  </div>
+
+  <button id="sendBtn" disabled>إرسال</button>
+  <button id="logoutBtn" style="margin-top:10px; background:#e74c3c;">تسجيل خروج</button>
+</div>
+
+<script>
+  const loginScreen = document.getElementById('loginScreen');
+  const chatScreen = document.getElementById('chatScreen');
+  const usernameInput = document.getElementById('usernameInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginMsg = document.getElementById('loginMsg');
+  const messagesDiv = document.getElementById('messages');
+  const messageInput = document.getElementById('messageInput');
+  const sendBtn = document.getElementById('sendBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const emojiBtn = document.getElementById('emojiBtn');
+  const emojiPicker = document.getElementById('emojiPicker');
+  const userInfo = document.getElementById('userInfo');
+
+  let username = null;
+  let messages = [];
+
+  // مجموعة إيموجي بسيطة
+  const emojis = ['😀','😂','😍','😎','😭','😡','👍','🙏','🎉','💔','😴','🤔'];
+
+  function loadMessages() {
+    const saved = localStorage.getItem('chatMessages');
+    messages = saved ? JSON.parse(saved) : [];
+  }
+
+  function saveMessages() {
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
+  }
+
+  function renderMessages() {
+    messagesDiv.innerHTML = '';
+    messages.forEach(m => {
+      const div = document.createElement('div');
+      div.classList.add('msg');
+      div.dataset.id = m.id;
+
+      const userSpan = document.createElement('span');
+      userSpan.classList.add('username');
+      userSpan.textContent = m.username;
+
+      const timeSpan = document.createElement('span');
+      timeSpan.classList.add('time');
+      timeSpan.textContent = new Date(m.timestamp).toLocaleTimeString('ar-EG');
+
+      const textDiv = document.createElement('div');
+      textDiv.classList.add('msgText');
+      textDiv.textContent = m.message;
+
+      div.appendChild(userSpan);
+      div.appendChild(timeSpan);
+      div.appendChild(textDiv);
+
+      // أزرار تعديل وحذف للرسائل الخاصة بالمستخدم
+      if(m.username === username){
+        const actions = document.createElement('div');
+        actions.classList.add('actions');
+
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'تعديل';
+        editBtn.onclick = () => editMessage(m.id);
+
+        const delBtn = document.createElement('button');
+        delBtn.textContent = 'حذف';
+        delBtn.onclick = () => deleteMessage(m.id);
+
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        div.appendChild(actions);
+      }
+
+      messagesDiv.appendChild(div);
+    });
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  function editMessage(id){
+    const msg = messages.find(m => m.id === id);
+    if(!msg) return;
+    const newText = prompt('عدل رسالتك:', msg.message);
+    if(newText !== null && newText.trim() !== ''){
+      msg.message = newText.trim();
+      saveMessages();
+      renderMessages();
+    }
+  }
+
+  function deleteMessage(id){
+    if(confirm('هل تريد حذف هذه الرسالة؟')){
+      messages = messages.filter(m => m.id !== id);
+      saveMessages();
+      renderMessages();
+    }
+  }
+
+  loginBtn.addEventListener('click', () => {
+    const name = usernameInput.value.trim();
+    if (!name) {
+      loginMsg.textContent = 'الرجاء كتابة اسم المستخدم';
+      return;
+    }
+    username = name;
+    loginScreen.style.display = 'none';
+    chatScreen.style.display = 'flex';
+    userInfo.textContent = `مرحبا، ${username}`;
+    loginMsg.textContent = '';
+
+    loadMessages();
+    renderMessages();
+    sendBtn.disabled = false;
+  });
+
+  logoutBtn.addEventListener('click', () => {
+    if (confirm('هل تريد تسجيل الخروج؟')) {
+      username = null;
+      chatScreen.style.display = 'none';
+      loginScreen.style.display = 'block';
+      messagesDiv.innerHTML = '';
+      messageInput.value = '';
+      sendBtn.disabled = true;
+      userInfo.textContent = '';
+    }
+  });
+
+  sendBtn.addEventListener('click', sendMessage);
+  messageInput.addEventListener('keydown', e => {
+    if(e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  function sendMessage() {
+    const text = messageInput.value.trim();
+    if (!text) return;
+    const newMsg = {
+      id: Date.now(),
+      username,
+      message: text,
+      timestamp: new Date().toISOString()
+    };
+    messages.push(newMsg);
+    saveMessages();
+    renderMessages();
+    messageInput.value = '';
+  }
+
+  // عرض واختيار الإيموجي
+  emojiBtn.addEventListener('click', () => {
+    if(emojiPicker.style.display === 'block'){
+      emojiPicker.style.display = 'none';
+    } else {
+      emojiPicker.style.display = 'block';
+      emojiPicker.style.bottom = '60px';
+      emojiPicker.style.right = '20px';
+    }
+  });
+
+  function insertAtCursor(text) {
+    const start = messageInput.selectionStart;
+    const end = messageInput.selectionEnd;
+    const oldText = messageInput.value;
+    messageInput.value = oldText.substring(0, start) + text + oldText.substring(end);
+    messageInput.selectionStart = messageInput.selectionEnd = start + text.length;
+    messageInput.focus();
+  }
+
+  // إضافة الإيموجي داخل الاختيار
+  emojis.forEach(e => {
+    const span = document.createElement('span');
+    span.textContent = e;
+    span.title = e;
+    span.onclick = () => {
+      insertAtCursor(e);
+      emojiPicker.style.display = 'none';
+    };
+    emojiPicker.appendChild(span);
+  });
+
+  // إخفاء الإيموجي إذا ضغط المستخدم في أي مكان خارجها
+  document.addEventListener('click', e => {
+    if (!emojiPicker.contains(e.target) && e.target !== emojiBtn){
+      emojiPicker.style.display = 'none';
+    }
+  });
+
+</script>
+
+</body>
+    </html>
