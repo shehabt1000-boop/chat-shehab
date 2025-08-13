@@ -3,47 +3,274 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>شات Shehab Academy (بدون سيرفر + ميزات)</title>
+<title>شات Shehab Academy (منظم + قائمة متصلين + صور)</title>
 <style>
-  body {font-family: Arial,sans-serif; background:#f0f2f5; margin:0; padding:20px; color:#111; display:flex; justify-content:center; height:100vh; flex-direction: column;}
-  #loginScreen, #chatScreen {max-width:500px; margin:auto; background:#fff; border-radius:8px; padding:20px; box-shadow:0 6px 18px rgba(0,0,0,0.1);}
-  #chatScreen {display:none; height:600px; display:flex; flex-direction: column;}
-  #messages {flex:1; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:6px; background:#fafafa;}
-  .msg {margin-bottom:10px; padding:8px; background:#fff; border-radius:6px; word-break:break-word; box-shadow:0 1px 3px rgba(0,0,0,0.1); position: relative;}
-  .msg .username {font-weight:bold;}
-  .msg .time {font-size:10px; color:#888; margin-left:10px;}
-  .msg .actions {position: absolute; top:5px; left:5px; display:flex; gap:5px;}
-  .msg .actions button {background:transparent; border:none; color:#2d8cff; cursor:pointer; font-size:12px; padding:0;}
-  textarea {width:100%; padding:8px; resize:none; border-radius:6px; border:1px solid #ddd; box-sizing: border-box;}
-  button {margin-top:8px; padding:10px 15px; background:#2d8cff; border:none; border-radius:6px; color:#fff; cursor:pointer; font-size:16px;}
-  button:disabled {background:#9ec1ff; cursor:not-allowed;}
-  #emojiPicker {display:none; border:1px solid #ddd; background:#fff; padding:8px; border-radius:6px; max-width: 300px; max-height: 120px; overflow-y: auto; position: absolute; bottom: 60px; right: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);}
-  #emojiPicker span {cursor:pointer; font-size:20px; margin:3px; user-select:none;}
-  #emojiBtn {position: relative;}
-  #userInfo {margin-bottom: 15px; font-weight: bold; text-align: center;}
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 20px;
+    color: #111;
+    display: flex;
+    justify-content: center;
+    height: 100vh;
+    flex-direction: column;
+  }
+
+  /* تسجيل الدخول */
+  #loginScreen {
+    max-width: 400px;
+    margin: auto;
+    background: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+
+  /* الشات */
+  #chatScreen {
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+    border-radius: 8px;
+    padding: 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+    display: none;
+    height: 600px;
+    display: flex;
+    flex-direction: row;
+  }
+
+  /* جانب المستخدمين */
+  #usersListContainer {
+    width: 250px;
+    border-left: 1px solid #ddd;
+    background: #fafafa;
+    padding: 15px;
+    box-sizing: border-box;
+    overflow-y: auto;
+  }
+  #usersListContainer h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  #usersList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .user img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #ccc;
+  }
+  .user .name {
+    flex: 1;
+    font-weight: bold;
+  }
+  .user .online-dot {
+    width: 10px;
+    height: 10px;
+    background: #2ecc71;
+    border-radius: 50%;
+  }
+
+  /* محتوى الشات */
+  #chatContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #userInfo {
+    padding: 12px 16px;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin: 12px 16px;
+    border-radius: 6px;
+    background: #fafafa;
+  }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 6px;
+    word-break: break-word;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: relative;
+  }
+
+  .msg img.avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid #ccc;
+    flex-shrink: 0;
+  }
+
+  .msgContent {
+    flex: 1;
+  }
+
+  .msgHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .msgUser {
+    font-weight: bold;
+  }
+
+  .msgTime {
+    font-size: 12px;
+    color: #666;
+    margin-left: 8px;
+    white-space: nowrap;
+  }
+
+  .msgText {
+    margin-top: 4px;
+    white-space: pre-wrap;
+  }
+
+  .actions {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: flex;
+    gap: 5px;
+  }
+
+  .actions button {
+    background: transparent;
+    border: none;
+    color: #2d8cff;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 0;
+  }
+
+  textarea {
+    width: 100%;
+    padding: 10px;
+    resize: none;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+  }
+
+  #inputArea {
+    padding: 12px 16px;
+    border-top: 1px solid #ddd;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    position: relative;
+  }
+
+  button {
+    padding: 10px 15px;
+    background: #2d8cff;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  button:disabled {
+    background: #9ec1ff;
+    cursor: not-allowed;
+  }
+
+  #logoutBtn {
+    margin-top: 8px;
+    background: #e74c3c;
+  }
+
+  #emojiPicker {
+    display: none;
+    border: 1px solid #ddd;
+    background: #fff;
+    padding: 8px;
+    border-radius: 6px;
+    max-width: 300px;
+    max-height: 120px;
+    overflow-y: auto;
+    position: absolute;
+    bottom: 55px;
+    right: 100px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    z-index: 10;
+  }
+
+  #emojiPicker span {
+    cursor: pointer;
+    font-size: 22px;
+    margin: 4px;
+    user-select: none;
+  }
+
+  #emojiBtn {
+    background: #eee;
+    border-radius: 6px;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+
 </style>
 </head>
 <body>
 
 <div id="loginScreen">
   <h2>تسجيل الدخول</h2>
-  <input type="text" id="usernameInput" placeholder="اكتب اسمك" />
-  <button id="loginBtn">دخول</button>
+  <input type="text" id="usernameInput" placeholder="اكتب اسمك" autocomplete="off" />
   <div id="loginMsg" style="color:red; margin-top:10px;"></div>
+  <button id="loginBtn">دخول</button>
 </div>
 
 <div id="chatScreen">
-  <div id="userInfo"></div>
-  <div id="messages"></div>
-
-  <div style="position: relative;">
-    <textarea id="messageInput" rows="3" placeholder="اكتب رسالتك هنا..."></textarea>
-    <button id="emojiBtn" title="أظهار الإيموجي" style="position: absolute; bottom: 10px; right: 10px; padding: 6px 10px; font-size: 20px; background:#eee; border:none; border-radius:6px; cursor:pointer;">😊</button>
+  <div id="chatContent">
+    <div id="userInfo"></div>
+    <div id="messages"></div>
+    <div id="inputArea">
+      <textarea id="messageInput" rows="2" placeholder="اكتب رسالتك هنا..."></textarea>
+      <button id="emojiBtn" title="أظهار الإيموجي">😊</button>
+      <button id="sendBtn" disabled>إرسال</button>
+    </div>
+    <button id="logoutBtn">تسجيل خروج</button>
     <div id="emojiPicker"></div>
   </div>
-
-  <button id="sendBtn" disabled>إرسال</button>
-  <button id="logoutBtn" style="margin-top:10px; background:#e74c3c;">تسجيل خروج</button>
+  <div id="usersListContainer">
+    <h3>المتصلون</h3>
+    <div id="usersList"></div>
+  </div>
 </div>
 
 <script>
@@ -59,20 +286,113 @@
   const emojiBtn = document.getElementById('emojiBtn');
   const emojiPicker = document.getElementById('emojiPicker');
   const userInfo = document.getElementById('userInfo');
+  const usersList = document.getElementById('usersList');
 
   let username = null;
   let messages = [];
+  let users = {};
 
   // مجموعة إيموجي بسيطة
   const emojis = ['😀','😂','😍','😎','😭','😡','👍','🙏','🎉','💔','😴','🤔'];
 
+  // Generate random cartoon avatar URL based on username and gender (male/female)
+  // هنا نولد صور كرتونية من موقع randomuser أو يمكن موقع مشابه
+  function getRandomAvatar(name) {
+    const hash = [...name].reduce((acc,c)=>acc+c.charCodeAt(0),0);
+    // نحدد نوع الجنس بشكل عشوائي من الاسم (لو الاسم فيه حرف "ة" نعتبر أنثى)
+    const isFemale = name.includes('ة');
+    const genderFolder = isFemale ? 'women' : 'men';
+    // رقم عشوائي بناء على اسم المستخدم (لتغيير الصورة)
+    const num = Math.abs(hash) % 100;
+    return `https://randomuser.me/api/portraits/${genderFolder}/${num}.jpg`;
+  }
+
+  // Load messages from localStorage
   function loadMessages() {
     const saved = localStorage.getItem('chatMessages');
     messages = saved ? JSON.parse(saved) : [];
   }
 
+  // Save messages to localStorage
   function saveMessages() {
     localStorage.setItem('chatMessages', JSON.stringify(messages));
+  }
+
+  // Load users from localStorage (keep only users active خلال 5 دقائق)
+  function loadUsers() {
+    const saved = localStorage.getItem('chatUsers');
+    users = saved ? JSON.parse(saved) : {};
+    cleanOldUsers();
+  }
+
+  // Save users to localStorage
+  function saveUsers() {
+    localStorage.setItem('chatUsers', JSON.stringify(users));
+  }
+
+  // Remove users not active خلال 5 دقائق (300000 ms)
+  function cleanOldUsers() {
+    const now = Date.now();
+    for (const key in users) {
+      if (now - users[key].lastActive > 300000) {
+        delete users[key];
+      }
+    }
+  }
+
+  // Register or update current user online status every 30 ثانية
+  function registerCurrentUser() {
+    if (!username) return;
+    users[username] = {
+      name: username,
+      avatar: getRandomAvatar(username),
+      lastActive: Date.now()
+    };
+    saveUsers();
+  }
+
+  // تحديث حالة المستخدمين كل 30 ثانية
+  setInterval(() => {
+    if(username){
+      registerCurrentUser();
+      renderUsers();
+    }
+  }, 30000);
+
+  // إضافة حدث unload لمسح المستخدم لو خرج
+  window.addEventListener('beforeunload', () => {
+    if(username){
+      delete users[username];
+      saveUsers();
+    }
+  });
+
+  function renderUsers() {
+    usersList.innerHTML = '';
+    cleanOldUsers();
+    for(const key in users){
+      const u = users[key];
+      const userDiv = document.createElement('div');
+      userDiv.className = 'user';
+
+      const img = document.createElement('img');
+      img.src = u.avatar;
+      img.alt = u.name;
+      img.title = u.name;
+
+      const nameSpan = document.createElement('span');
+      nameSpan.className = 'name';
+      nameSpan.textContent = u.name;
+
+      const onlineDot = document.createElement('div');
+      onlineDot.className = 'online-dot';
+      onlineDot.title = 'متصل الآن';
+
+      userDiv.appendChild(img);
+      userDiv.appendChild(nameSpan);
+      userDiv.appendChild(onlineDot);
+      usersList.appendChild(userDiv);
+    }
   }
 
   function renderMessages() {
@@ -82,26 +402,44 @@
       div.classList.add('msg');
       div.dataset.id = m.id;
 
+      // صورة المستخدم
+      const avatarImg = document.createElement('img');
+      avatarImg.className = 'avatar';
+      avatarImg.src = getRandomAvatar(m.username);
+      avatarImg.alt = m.username;
+
+      // محتوى الرسالة
+      const content = document.createElement('div');
+      content.className = 'msgContent';
+
+      // الهيدر (الاسم والوقت)
+      const header = document.createElement('div');
+      header.className = 'msgHeader';
+
       const userSpan = document.createElement('span');
-      userSpan.classList.add('username');
+      userSpan.className = 'msgUser';
       userSpan.textContent = m.username;
 
       const timeSpan = document.createElement('span');
-      timeSpan.classList.add('time');
-      timeSpan.textContent = new Date(m.timestamp).toLocaleTimeString('ar-EG');
+      timeSpan.className = 'msgTime';
+      const date = new Date(m.timestamp);
+      timeSpan.textContent = date.toLocaleTimeString('ar-EG', {hour: '2-digit', minute: '2-digit'});
 
+      header.appendChild(userSpan);
+      header.appendChild(timeSpan);
+
+      // نص الرسالة
       const textDiv = document.createElement('div');
-      textDiv.classList.add('msgText');
+      textDiv.className = 'msgText';
       textDiv.textContent = m.message;
 
-      div.appendChild(userSpan);
-      div.appendChild(timeSpan);
-      div.appendChild(textDiv);
+      content.appendChild(header);
+      content.appendChild(textDiv);
 
       // أزرار تعديل وحذف للرسائل الخاصة بالمستخدم
       if(m.username === username){
         const actions = document.createElement('div');
-        actions.classList.add('actions');
+        actions.className = 'actions';
 
         const editBtn = document.createElement('button');
         editBtn.textContent = 'تعديل';
@@ -115,6 +453,9 @@
         actions.appendChild(delBtn);
         div.appendChild(actions);
       }
+
+      div.appendChild(avatarImg);
+      div.appendChild(content);
 
       messagesDiv.appendChild(div);
     });
@@ -149,20 +490,28 @@
     username = name;
     loginScreen.style.display = 'none';
     chatScreen.style.display = 'flex';
-    userInfo.textContent = `مرحبا، ${username}`;
-    loginMsg.textContent = '';
+    userInfo.textContent = `مرحباً، ${username}`;
 
     loadMessages();
+    loadUsers();
+    registerCurrentUser();
     renderMessages();
+    renderUsers();
+
     sendBtn.disabled = false;
   });
 
   logoutBtn.addEventListener('click', () => {
     if (confirm('هل تريد تسجيل الخروج؟')) {
+      if(username) {
+        delete users[username];
+        saveUsers();
+      }
       username = null;
       chatScreen.style.display = 'none';
       loginScreen.style.display = 'block';
       messagesDiv.innerHTML = '';
+      usersList.innerHTML = '';
       messageInput.value = '';
       sendBtn.disabled = true;
       userInfo.textContent = '';
@@ -198,8 +547,6 @@
       emojiPicker.style.display = 'none';
     } else {
       emojiPicker.style.display = 'block';
-      emojiPicker.style.bottom = '60px';
-      emojiPicker.style.right = '20px';
     }
   });
 
@@ -212,7 +559,6 @@
     messageInput.focus();
   }
 
-  // إضافة الإيموجي داخل الاختيار
   emojis.forEach(e => {
     const span = document.createElement('span');
     span.textContent = e;
@@ -230,8 +576,7 @@
       emojiPicker.style.display = 'none';
     }
   });
-
 </script>
 
 </body>
-    </html>
+      </html>
